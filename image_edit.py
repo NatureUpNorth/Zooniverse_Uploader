@@ -3,13 +3,16 @@ import os
 import glob
 import piexif
 
+
 file_path = "/Users/remileblanc/Dropbox/College/Nature Up North/Opossum/test.JPG"
 dir_path = "/Users/remileblanc/Desktop/test_pics/*"
 out_path = "/Users/remileblanc/Desktop/ResizedImages"
 
 target_size = 1000000
 
+# get all images in folder
 images = glob.glob(dir_path)
+
 for image in images:
     try:
         img = Image.open(image)
@@ -27,7 +30,18 @@ for image in images:
 
     exif_dict['0th'][piexif.ImageIFD.Copyright] = cr
     exif_dict['1st'][piexif.ImageIFD.Copyright] = cr
-    exif_bytes = piexif.dump(exif_dict)
+    print(exif_dict)
+
+    # common error is some game camera images
+    try:
+        exif_dict['Exif'][37380] = (0,1)
+    except:
+        pass
+
+    try:
+        exif_bytes = piexif.dump(exif_dict)
+    except:
+        print("Exif data is improperly formatted by camera.")
 
     if size < target_size:
         img.save(old_file, exif=exif_bytes)
@@ -42,4 +56,3 @@ for image in images:
         # optimize image and decrease the resolution
         img.save(new_file, optimize=True, exif=exif_bytes)
         size = os.path.getsize(new_file)
-
