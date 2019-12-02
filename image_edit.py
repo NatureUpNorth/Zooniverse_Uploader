@@ -2,13 +2,10 @@ from PIL import Image
 import os
 import glob
 import piexif
-import sys
 
 file_path = "/Users/remileblanc/Dropbox/College/Nature Up North/Opossum/test.JPG"
-# dir_path = "/Users/remileblanc/Dropbox/College/Nature Up North/test_pics/*"
 dir_path = "/Users/remileblanc/Desktop/test_pics/*"
 out_path = "/Users/remileblanc/Desktop/ResizedImages"
-# out_path = "/Users/remileblanc/Dropbox/College/Nature Up North/ResizedImages"
 
 target_size = 1000000
 
@@ -25,7 +22,7 @@ for image in images:
     new_file = outfile + extension
     old_file = new_file.replace('_resized', '')
 
-    exif_dict = piexif.load(img.info['exif'])
+    exif_dict = piexif.load(img.filename)
     cr = str.encode('Nature Up North')
 
     exif_dict['0th'][piexif.ImageIFD.Copyright] = cr
@@ -33,21 +30,16 @@ for image in images:
     exif_bytes = piexif.dump(exif_dict)
 
     if size < target_size:
-        img.save(old_file,exif=exif_bytes)
+        img.save(old_file, exif=exif_bytes)
         continue
+    # just saving the image makes it smaller
+    img.save(new_file)
     while size >= target_size:
-        width -= 1
-        height -= 1
-        # this method does not seem to work
-        img = img.resize((width, height))
-        # I dont want to save it every time, but i need to to get the size...
-        img.save(new_file, exif=exif_bytes)
+        # decrease resolution
+        width -= 100
+        height -= 100
+        img = img.resize((width,height))
+        # optimize image and decrease the resolution
+        img.save(new_file, optimize=True, exif=exif_bytes)
         size = os.path.getsize(new_file)
-        print(size)
-        print("size: ", sys.getsizeof(img))
-
-
-
-
-
 
