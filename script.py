@@ -5,9 +5,7 @@ dbx = dropbox.Dropbox("")
 dbx.users_get_current_account()
 
 for entry in dbx.files_list_folder('Test').entries:
-    dbx.files_list_folder(entry,recursive = True)
-
-
+    dbx.files_list_folder(entry, recursive = True)
 
 Panoptes.connect(username='', password='')
 
