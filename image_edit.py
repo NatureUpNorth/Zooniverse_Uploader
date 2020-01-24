@@ -1,12 +1,14 @@
-from PIL import Image, ImageEnhance
+from PIL import Image
 import os
 import glob
-import piexif
+from panoptes_client import Panoptes, Project, SubjectSet, Subject
+import dropbox
 
 
 file_path = "/Users/remileblanc/Dropbox/College/Nature Up North/Opossum/test.JPG"
 dir_path = "/Users/remileblanc/Desktop/test_pics/*"
 out_path = "/Users/remileblanc/Desktop/ResizedImages"
+path = "/Users/remileblanc/Desktop/ResizedImages/*"
 
 target_size = 1000000
 
@@ -26,23 +28,19 @@ for image in images:
         new_file = outfile + extension
         old_file = new_file.replace('_resized', '')
 
-        try:
-            exif_dict = piexif.load(img.filename)
-            cr = str.encode('Nature Up North')
-            exif_dict['0th'][piexif.ImageIFD.Copyright] = cr
-            exif_dict['1st'][piexif.ImageIFD.Copyright] = cr
-            # common error in exif data
-            exif_dict['Exif'][37380] = (0,1)
-            exif_bytes = piexif.dump(exif_dict)
-        except IOError:
-            print("Exif data is improperly formatted by camera.")
-
         if size < target_size:
-            img.save(old_file, exif=exif_bytes)
+
+            img.save(old_file)
             continue
         # just saving the image makes it smaller
         quality = 75
         img.save(new_file)
+
+        # decreases quality of image on a scale from 1 (worst) to 95 (best). The default is 75.
+        while size >= target_size and quality >= 40:
+            quality -= 5
+            img.save(new_file, optimize=True, quality=quality)
+            size = os.path.getsize(new_file)
 
         # decreasing the pixels
         while size >= target_size:
@@ -51,48 +49,44 @@ for image in images:
             height -= 100
             img = img.resize((width, height))
             # optimize image and decrease size
-            img.save(new_file, optimize=True, exif=exif_bytes)
+            img.save(new_file, optimize=True)
             size = os.path.getsize(new_file)
-            print(size)
-
-        # decreases quality of image on a scale from 1 (worst) to 95 (best). The default is 75.
-        # while size >= target_size:
-        #     quality -= 5
-        #     img.save(new_file, optimize=True, exif=exif_bytes, quality=quality)
-        #     size = os.path.getsize(new_file)
-
-        # decrease sharpness of image
-        # factor = 1.0 # default
-        # sharpen = ImageEnhance.Sharpness(img)
-        # while size >= target_size:
-        #     factor -= 0.1
-        #     img = sharpen.enhance(factor)
-        #     img.save(new_file, optimize=True, exif=exif_bytes)
-        #     size = os.path.getsize(new_file)
-        #     print(size)
-
-        # decrease brightness of image
-        # factor = 1.0 # default
-        # brighten = ImageEnhance.Brightness(img)
-        # while size >= target_size:
-        #     factor -= 0.1
-        #     img = brighten.enhance(factor)
-        #     img.save(new_file, optimize=True, exif=exif_bytes)
-        #     size = os.path.getsize(new_file)
-        #     print(size)
-
-        # # decrease contrast of image
-        # factor = 1.0 # default
-        # contrast = ImageEnhance.Contrast(img)
-        # while size >= target_size:
-        #     factor -= 0.1
-        #     img = contrast.enhance(factor)
-        #     img.save(new_file, optimize=True, exif=exif_bytes)
-        #     size = os.path.getsize(new_file)
-        #     print(size)
-
 
     except Exception as e:
         print('Failure whilst processing "' + img.filename + '": ' + str(e))
 
 # delete the tmp file after the images have been resized
+
+Panoptes.connect(username='', password='')
+
+project = Project.find("6307")
+print(project.display_name)
+
+subject_set = SubjectSet()
+s = Subject()
+
+subject_set.links.project = project
+subject_set.display_name = 'Tutorial subject set 7'
+
+images = glob.glob(path)
+new_subjects = []
+
+for img in images:
+    s = Subject()
+    s.links.project = project
+    s.add_location(img)
+    s.save()
+    new_subjects.append(s)
+subject_set.save()
+subject_set.add(new_subjects)
+
+# once upload to zooniverse is complete, delete resized images
+for img in images:
+    os.remove(img)
+
+# move uploaded images out of original folder to archive
+og_images = glob.glob(dir_path)
+completed_images = "/Users/remileblanc/Desktop/completed_images/"
+for img in og_images:
+    os.rename(img, completed_images+os.path.basename(os.path.normpath(img)))
+
