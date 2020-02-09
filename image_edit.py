@@ -1,8 +1,8 @@
 from PIL import Image
 import os
 import glob
+import time
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
-import dropbox
 
 
 file_path = "/Users/remileblanc/Dropbox/College/Nature Up North/Opossum/test.JPG"
@@ -29,7 +29,6 @@ for image in images:
         old_file = new_file.replace('_resized', '')
 
         if size < target_size:
-
             img.save(old_file)
             continue
         # just saving the image makes it smaller
@@ -53,11 +52,19 @@ for image in images:
             size = os.path.getsize(new_file)
 
     except Exception as e:
-        print('Failure whilst processing "' + img.filename + '": ' + str(e))
+        # print('Failure whilst processing "' + img.filename + '": ' + str(e))
+        if os.path.splitext(image)[1] == ".csv":
+            os.rename(image, out_path+'/'+os.path.basename(os.path.normpath(image)))
 
+        else:
+            f = open("/Users/remileblanc/Desktop/log.txt", "a")
+            t = time.localtime()
+
+            f.write('\nFailure whilst processing "' + image + '": ' + str(e)+ " " + time.strftime("%D:%H:%M:%S",t))
+            f.close()
 # delete the tmp file after the images have been resized
 
-Panoptes.connect(username='', password='')
+Panoptes.connect(username='natureupnorth@gmail.com', password='NatureRocks4')
 
 project = Project.find("6307")
 print(project.display_name)
@@ -66,14 +73,18 @@ subject_set = SubjectSet()
 s = Subject()
 
 subject_set.links.project = project
-subject_set.display_name = 'Tutorial subject set 7'
+subject_set.display_name = 'Tutorial subject set 2'
 
 images = glob.glob(path)
 new_subjects = []
 
 for img in images:
+    print(img)
     s = Subject()
     s.links.project = project
+    # if os.path.splitext(img)[1] == ".csv":
+    #     s.metadata.update(img)
+    # else:
     s.add_location(img)
     s.save()
     new_subjects.append(s)
