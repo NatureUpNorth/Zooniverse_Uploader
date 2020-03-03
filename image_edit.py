@@ -5,6 +5,9 @@ import time
 import csv
 import shutil
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
+import zooniverseconfig as zcfg
+import smtplib
+import emailconfig as ecfg
 
 dir_path = "/Users/remileblanc/Desktop/test_pics/*"
 out_path = "/Users/remileblanc/Desktop/ResizedImages"
@@ -14,6 +17,7 @@ errorfiles = "/Users/remileblanc/Desktop/ErrorFiles/"
 completed_images = "/Users/remileblanc/Desktop/completed_images"
 
 target_size = 1000000
+image_count = 0
 
 # get all images in folder
 images = glob.glob(dir_path)
@@ -70,7 +74,7 @@ for image in images:
 # delete the tmp file after the images have been resized
 
 try:
-    Panoptes.connect(username='', password='')
+    Panoptes.connect(username=zcfg.login['user'], password=zcfg.login['pass'])
     project = Project.find("6307")
 except Exception as e:
     f = open(logfile, "a")
@@ -94,7 +98,7 @@ for img in images:
         s = Subject()
         s.links.project = project
         # manifest file
-        if os.path.splitext(img)[1] == ".csv":
+        if os.path.splitext(img)[1] == ".csv":   # upload manifest info.... not sure how this will be set up after second step
             # move csv to complete images folder
             shutil.copy(f, completed_images)
             # make dict out of csv file for upload
@@ -105,6 +109,7 @@ for img in images:
             s.add_location(img)
             s.save()
             new_subjects.append(s)
+            image_count+=1
     except Exception as e:
         f = open(logfile, "a")
         t = time.localtime()
@@ -139,3 +144,27 @@ for img in images:
         pass
 
 
+
+
+
+
+# Completion - send email
+
+
+count = 100
+subject_set_name = subject_set.display_name
+files = os.listdir(errorfiles) # dir is your directory path
+error_count = len(files)
+content = '''Subject: Successful Zooinverse Upload
+
+At {time}, {c} images were uploaded to Zooniverse by Subject Set {s_s_n}. {e_c} files were unsuccessfully loaded.'''\
+    .format(time=time.strftime("%D:%H:%M:%S",time.localtime()),
+                                                  c=image_count,
+                                                  s_s_n=subject_set_name,
+                                                  e_c=error_count)
+mail = smtplib.SMTP('smtp.gmail.com', 587)
+mail.ehlo()
+mail.starttls()
+mail.login(ecfg.login['user'], ecfg.login['pass'])
+mail.sendmail(ecfg.login['user'], 'rwlebl16@stlawu.edu', content)
+mail.close()
