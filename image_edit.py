@@ -9,12 +9,12 @@ import zooniverseconfig as zcfg
 import smtplib
 import emailconfig as ecfg
 
-dir_path = "/Users/remileblanc/Desktop/test_pics/*"
-out_path = "/Users/remileblanc/Desktop/ResizedImages"
-path = "/Users/remileblanc/Desktop/ResizedImages/*"
-logfile = "/Users/remileblanc/Desktop/log.txt"
-errorfiles = "/Users/remileblanc/Desktop/ErrorFiles/"
-completed_images = "/Users/remileblanc/Desktop/completed_images"
+dir_path = "/Users/remileblanc/Dropbox/Remi/SLU/Nature Up North/ImageFolders/start_pics/*"
+out_path = "/Users/remileblanc/Dropbox/Remi/SLU/Nature Up North/ImageFolders/resized_pics"
+path = "/Users/remileblanc/Dropbox/Remi/SLU/Nature Up North/ImageFolders/resized_pics/*"
+logfile = "/Users/remileblanc/Dropbox/Remi/SLU/Nature Up North/ImageFolders/log.txt"
+errorfiles = "/Users/remileblanc/Dropbox/Remi/SLU/Nature Up North/ImageFolders/error_files"
+completed_images = "/Users/remileblanc/Dropbox/Remi/SLU/Nature Up North/ImageFolders/completed_images"
 
 target_size = 1000000
 image_count = 0
